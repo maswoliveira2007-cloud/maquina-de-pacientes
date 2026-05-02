@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Máquina de Pacientes — Gestão de Jornada de Compra</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg:       rgb(4, 7, 13);
+            --bg2:      rgb(11, 14, 24);
+            --bg3:      rgb(16, 19, 28);
+            --border:   rgba(216, 231, 242, 0.07);
+            --borderL:  rgba(216, 231, 242, 0.13);
+            --accent:   rgb(166, 218, 255);
+            --glow:     rgba(168, 209, 255, 0.5);
+            --text:     rgb(213, 219, 230);
+            --text2:    rgba(184, 199, 217, 0.5);
+            --text3:    rgba(255, 255, 255, 0.6);
+            --red:      rgb(255, 130, 130);
+            --red-bg:   rgba(255, 100, 100, 0.12);
+            --green:    rgb(100, 255, 150);
+            --green-bg: rgba(100, 255, 150, 0.12);
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: #000;
+            color: var(--text);
+            font-size: 16px;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+
+        .serif { font-family: 'Instrument Serif', serif; font-style: italic; }
+
+        /* NAV */
+        nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            background: rgba(4, 7, 13, 0.85);
+            backdrop-filter: blur(14px);
+            border-bottom: 1px solid var(--border);
+            padding: 18px 40px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .nav-logo { font-size: 18px; font-weight: 600; letter-spacing: -0.02em; }
+        .nav-logo span { color: var(--accent); }
+        .nav-links { display: flex; gap: 4px; list-style: none; }
+        .nav-links a {
+            color: var(--text); text-decoration: none; opacity: 0.6;
+            font-size: 13px; padding: 7px 14px; border-radius: 100px;
+            transition: opacity 0.2s;
+        }
+        .nav-links a:hover { opacity: 1; }
+
+        /* LAYOUT */
+        section { padding: 100px 40px; max-width: 1100px; margin: 0 auto; position: relative; }
+        .divider {
+            height: 1px; max-width: 1100px; margin: 0 auto;
+            background: linear-gradient(90deg, transparent, var(--border), transparent);
+        }
+
+        /* BADGE */
+        .badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: var(--bg); border: 1px solid var(--border);
+            border-radius: 100px; padding: 7px 18px;
+            font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+            color: var(--text); margin-bottom: 24px;
+        }
+        .dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: var(--accent); box-shadow: 0 0 16px var(--glow);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+        /* HEADINGS */
+        h1 {
+            font-size: clamp(38px, 5vw, 68px); font-weight: 500;
+            letter-spacing: -0.025em; line-height: 1.1; margin-bottom: 24px;
+        }
+        h2 {
+            font-size: clamp(28px, 3.5vw, 42px); font-weight: 500;
+            letter-spacing: -0.02em; line-height: 1.2; margin-bottom: 14px;
+        }
+        h3 { font-size: 22px; font-weight: 500; letter-spacing: -0.015em; margin-bottom: 10px; }
+        .gt {
+            background: linear-gradient(135deg, var(--text) 45%, rgba(4,7,13,0.6) 140%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        p, li { color: var(--text2); font-size: 15px; line-height: 1.75; }
+
+        /* SECTION HEADER */
+        .sh { text-align: center; margin-bottom: 56px; }
+        .sh p { max-width: 580px; margin: 12px auto 0; font-size: 17px; }
+
+        /* HERO */
+        .hero {
+            min-height: 100vh; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center;
+            padding-top: 100px; padding-bottom: 60px; position: relative;
+        }
+        .hero::before {
+            content: ''; position: absolute; inset: 0; pointer-events: none;
+            background: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(64,120,168,0.14) 0%, transparent 65%);
+        }
+        .hero-sub { font-size: 18px; color: var(--text3); max-width: 600px; margin: 0 auto 40px; line-height: 1.65; }
+        .scroll { margin-top: 56px; animation: bounce 2.2s infinite; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(9px); } }
+
+        /* HERO TAGS */
+        .hero-tags { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-bottom: 40px; }
+        .hero-tag {
+            padding: 6px 16px; border-radius: 100px;
+            background: rgba(166,218,255,0.06); border: 1px solid rgba(166,218,255,0.12);
+            font-size: 13px; color: var(--accent); font-weight: 500;
+        }
+
+        /* CARD BASE */
+        .card {
+            background: var(--bg); border: 1px solid var(--border);
+            border-radius: 18px; padding: 28px; position: relative; overflow: hidden;
+        }
+        .card::before {
+            content: ''; position: absolute; top: 0; right: 0;
+            width: 180px; height: 180px;
+            background: radial-gradient(50% 50% at 90% 10%, rgba(166,218,255,0.08) 0%, transparent 100%);
+            pointer-events: none;
+        }
+        .card-icon {
+            width: 44px; height: 44px; border-radius: 12px;
+            background: var(--bg3); border: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: center; margin-bottom: 18px;
+        }
+        .card-icon svg { width: 20px; height: 20px; color: var(--accent); }
+
+        /* GRIDS */
+        .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .g3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        .g4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+        .ga { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+
+        /* PROBLEM CARDS */
+        .pc {
+            background: var(--bg); border: 1px solid var(--border);
+            border-radius: 14px; padding: 26px; margin-bottom: 14px;
+        }
+        .pc-num {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 30px; height: 30px; border-radius: 50%;
+            background: var(--red-bg); color: var(--red);
+            font-size: 13px; font-weight: 600; margin-bottom: 12px;
+        }
+        .pc h4 { font-size: 17px; font-weight: 500; color: var(--text); margin-bottom: 10px; }
+        .pc ul { list-style: none; }
+        .pc li { padding: 3px 0 3px 18px; position: relative; font-size: 14px; }
+        .pc li::before {
+            content: ''; position: absolute; left: 0; top: 12px;
+            width: 5px; height: 5px; border-radius: 50%;
+            background: rgba(255,100,100,0.4);
+        }
+
+        /* CICLO VICIOSO */
+        .cv-wrap {
+            display: grid; grid-template-columns: 1fr 1fr 1fr;
+            gap: 0; max-width: 900px; margin: 48px auto; position: relative;
+        }
+        .cv-wrap::before {
+            content: ''; position: absolute;
+            top: 50%; left: 16.6%; right: 16.6%; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,100,100,0.25), transparent);
+            transform: translateY(-50%); z-index: 0;
+        }
+        .cv-node {
+            text-align: center; padding: 24px 16px; position: relative; z-index: 1;
+        }
+        .cv-icon {
+            width: 56px; height: 56px; border-radius: 14px; margin: 0 auto 14px;
+            background: var(--red-bg); border: 1px solid rgba(255,100,100,0.2);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .cv-icon svg { width: 22px; height: 22px; color: var(--red); }
+        .cv-node h4 { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+        .cv-node p { font-size: 12px; color: var(--text2); line-height: 1.5; }
+        .cv-center {
+            background: rgba(255,100,100,0.04); border: 1px solid rgba(255,100,100,0.12);
+            border-radius: 20px; padding: 32px; text-align: center; margin-top: 32px;
+        }
+        .cv-center h4 { font-size: 18px; color: var(--red); font-weight: 500; margin-bottom: 10px; }
+        .cv-center p { font-size: 15px; max-width: 600px; margin: 0 auto; }
+
+        /* ICEBERG */
+        .iceberg-section { padding: 80px 40px; max-width: 1100px; margin: 0 auto; }
+        .iceberg-wrap {
+            position: relative; border-radius: 20px; overflow: hidden;
+            max-width: 860px; margin: 0 auto;
+        }
+        .iceberg-wrap img {
+            width: 100%; display: block;
+            filter: brightness(0.55) saturate(0.7);
+        }
+        .iceberg-overlay {
+            position: absolute; inset: 0;
+            background: linear-gradient(
+                180deg,
+                rgba(4,7,13,0.05) 0%,
+                rgba(4,7,13,0.0) 30%,
+                rgba(4,7,13,0.15) 48%,
+                rgba(4,7,13,0.0) 52%,
+                rgba(4,7,13,0.05) 100%
+            );
+        }
+        .iceberg-line {
+            position: absolute; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent 5%, rgba(166,218,255,0.35) 30%, rgba(166,218,255,0.35) 70%, transparent 95%);
+        }
+        .iceberg-label-group {
+            position: absolute; left: 0; right: 0;
+            display: flex; justify-content: center; align-items: center; gap: 10px;
+            flex-wrap: wrap;
+        }
+        .iceberg-tag {
+            padding: 5px 14px; border-radius: 100px;
+            font-size: 12px; font-weight: 600; letter-spacing: 0.04em;
+            backdrop-filter: blur(8px);
+        }
+        .iceberg-tag.visible {
+            background: rgba(166,218,255,0.1); border: 1px solid rgba(166,218,255,0.25);
+            color: var(--accent);
+        }
+        .iceberg-tag.hidden {
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.65);
+        }
+        .iceberg-caption {
+            position: absolute; left: 20px;
+            font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+        }
+        .iceberg-caption.top { color: rgba(166,218,255,0.7); }
+        .iceberg-caption.bot { color: rgba(255,255,255,0.35); }
+        .iceberg-text { text-align: center; margin-top: 32px; max-width: 640px; margin-left: auto; margin-right: auto; }
+        .iceberg-text p { font-size: 16px; line-height: 1.75; }
+
+        /* JORNADA */
+        .jornada-wrap { display: flex; flex-direction: column; gap: 0; margin-top: 56px; }
+        .jornada-step {
+            display: grid; grid-template-columns: 72px 1fr;
+            gap: 0; position: relative;
+        }
+        .jornada-step:not(:last-child)::after {
+            content: ''; position: absolute;
+            left: 35px; top: 72px; bottom: 0;
+            width: 1px;
+            background: linear-gradient(180deg, var(--borderL), transparent);
+        }
+        .js-mark {
+            flex-shrink: 0; padding-top: 16px; text-align: center;
+        }
+        .js-num {
+            width: 46px; height: 46px; border-radius: 12px;
+            background: var(--bg3); border: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 13px; font-weight: 600; color: var(--accent);
+            margin: 0 auto;
+        }
+        .js-body {
+            padding: 16px 0 48px 28px;
+        }
+        .js-stage {
+            font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em;
+            color: var(--accent); margin-bottom: 4px; font-weight: 600;
+        }
+        .js-meaning {
+            display: inline-block; font-size: 12px; color: var(--text2);
+            background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+            border-radius: 100px; padding: 3px 12px; margin-bottom: 12px;
+        }
+        .js-body h4 { font-size: 19px; font-weight: 500; color: var(--text); margin-bottom: 10px; }
+        .js-body p { font-size: 14px; color: var(--text2); margin-bottom: 14px; max-width: 680px; }
+        .js-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+        .js-pill {
+            padding: 5px 14px; border-radius: 100px;
+            background: rgba(166,218,255,0.05); border: 1px solid rgba(166,218,255,0.12);
+            font-size: 12px; color: var(--accent);
+        }
+
+        /* ELEV */
+        .elev-wrap { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; margin-top: 56px; position: relative; }
+        .elev-wrap::before {
+            content: ''; position: absolute; inset: 0;
+            background: var(--border); z-index: 0; border-radius: 18px;
+        }
+        .elev-card {
+            background: var(--bg); padding: 32px 24px;
+            position: relative; z-index: 1;
+            border-radius: 0;
+        }
+        .elev-card:first-child { border-radius: 18px 0 0 18px; }
+        .elev-card:last-child { border-radius: 0 18px 18px 0; }
+        .elev-letter {
+            font-size: 52px; font-weight: 700; line-height: 1;
+            color: var(--accent); opacity: 0.18; margin-bottom: 16px;
+            letter-spacing: -0.04em;
+        }
+        .elev-label {
+            font-size: 14px; font-weight: 600; color: var(--text);
+            text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px;
+        }
+        .elev-card p { font-size: 13px; line-height: 1.65; }
+
+        /* ENTREGÁVEIS */
+        .ent-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 48px; }
+        .ent-card {
+            background: var(--bg); border: 1px solid var(--border);
+            border-radius: 14px; padding: 24px; display: flex; gap: 18px;
+        }
+        .ent-num {
+            flex-shrink: 0; width: 36px; height: 36px; border-radius: 10px;
+            background: rgba(166,218,255,0.08); border: 1px solid rgba(166,218,255,0.15);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 13px; font-weight: 700; color: var(--accent);
+        }
+        .ent-body h4 { font-size: 15px; font-weight: 500; color: var(--text); margin-bottom: 6px; }
+        .ent-body p { font-size: 13px; line-height: 1.6; }
+
+        /* OPOSTOS */
+        .opostos-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 56px; }
+        .op-col { border-radius: 18px; overflow: hidden; }
+        .op-header {
+            padding: 20px 28px; font-size: 13px; font-weight: 700;
+            letter-spacing: 0.08em; text-transform: uppercase;
+        }
+        .op-col.bad .op-header {
+            background: var(--red-bg); color: var(--red); border-bottom: 1px solid rgba(255,100,100,0.15);
+        }
+        .op-col.good .op-header {
+            background: rgba(166,218,255,0.07); color: var(--accent); border-bottom: 1px solid rgba(166,218,255,0.15);
+        }
+        .op-col.bad { background: rgba(255,100,100,0.03); border: 1px solid rgba(255,100,100,0.12); }
+        .op-col.good { background: rgba(166,218,255,0.03); border: 1px solid rgba(166,218,255,0.12); }
+        .op-row {
+            display: flex; align-items: flex-start; gap: 12px;
+            padding: 14px 28px; border-bottom: 1px solid var(--border);
+        }
+        .op-row:last-child { border-bottom: none; }
+        .op-icon { flex-shrink: 0; font-size: 14px; margin-top: 1px; }
+        .op-col.bad .op-icon { color: var(--red); opacity: 0.7; }
+        .op-col.good .op-icon { color: var(--accent); opacity: 0.8; }
+        .op-row p { font-size: 14px; line-height: 1.55; color: var(--text2); }
+        .op-row p strong { color: var(--text); font-weight: 500; }
+
+        /* GARANTIA */
+        .garantia-wrap {
+            background: linear-gradient(135deg, rgba(166,218,255,0.04) 0%, rgba(166,218,255,0.01) 100%);
+            border: 1px solid rgba(166,218,255,0.12);
+            border-radius: 24px; padding: 56px; text-align: center;
+            position: relative; overflow: hidden; margin-top: 56px;
+        }
+        .garantia-wrap::before {
+            content: ''; position: absolute;
+            top: -60px; left: 50%; transform: translateX(-50%);
+            width: 320px; height: 200px;
+            background: radial-gradient(ellipse, rgba(166,218,255,0.06) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .garantia-big {
+            font-size: clamp(32px, 4vw, 52px); font-weight: 500;
+            color: var(--text); letter-spacing: -0.025em; line-height: 1.2;
+            margin-bottom: 20px;
+        }
+        .garantia-sub { font-size: 17px; max-width: 580px; margin: 0 auto 32px; }
+        .garantia-badge {
+            display: inline-flex; align-items: center; gap: 10px;
+            background: rgba(166,218,255,0.08); border: 1px solid rgba(166,218,255,0.2);
+            border-radius: 12px; padding: 16px 28px;
+            font-size: 15px; color: var(--accent); font-weight: 500;
+        }
+
+        /* QUOTE BLOCK */
+        .qb {
+            background: var(--bg); border: 1px solid var(--border);
+            border-radius: 18px; padding: 38px; margin: 44px 0; text-align: center;
+        }
+        .qb p { font-size: 17px; color: var(--text2); line-height: 1.7; max-width: 680px; margin: 0 auto; }
+
+        /* CTA */
+        .cta-wrap { text-align: center; padding: 80px 40px; }
+        .cta-title { font-size: clamp(26px, 3vw, 38px); font-weight: 500; letter-spacing: -0.02em; margin-bottom: 14px; }
+        .cta-sub { font-size: 16px; color: var(--text2); margin-bottom: 36px; }
+        .cta-btn {
+            display: inline-flex; align-items: center; gap: 10px;
+            padding: 16px 34px; background: rgba(166,218,255,0.08);
+            border: 1px solid rgba(166,218,255,0.2); border-radius: 10px;
+            color: var(--accent); font-size: 16px; font-weight: 600;
+            text-decoration: none; cursor: pointer; transition: all 0.2s;
+            position: relative; overflow: hidden;
+        }
+        .cta-btn:hover { background: rgba(166,218,255,0.13); }
+
+        /* FOOTER */
+        footer { text-align: center; padding: 56px 40px; border-top: 1px solid var(--border); }
+        footer .fb { font-size: 17px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+        footer .fb span { color: var(--accent); }
+        footer p { font-size: 13px; }
+
+        /* DATA CARDS */
+        .dc {
+            background: var(--bg); border: 1px solid var(--border);
+            border-radius: 14px; padding: 22px; text-align: center;
+        }
+        .dc-val { font-size: 26px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+        .dc-lbl { font-size: 12px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em; }
+        .dc-src { font-size: 10px; color: var(--text2); opacity: 0.5; margin-top: 6px; }
+
+        /* RISK BOX */
+        .rb {
+            background: rgba(255,100,100,0.04);
+            border: 1px solid rgba(255,100,100,0.12);
+            border-radius: 14px; padding: 26px; margin-top: 36px;
+        }
+        .rb h4 {
+            color: var(--red); font-size: 14px; font-weight: 600;
+            margin-bottom: 14px; display: flex; align-items: center; gap: 9px;
+        }
+        .rb ul { list-style: none; }
+        .rb li { padding: 4px 0 4px 18px; position: relative; font-size: 14px; }
+        .rb li::before {
+            content: ''; position: absolute; left: 0; top: 12px;
+            width: 5px; height: 5px; border-radius: 50%; background: rgba(255,100,100,0.4);
+        }
+
+        /* GANTT */
+        .gantt-wrap {
+            background: var(--bg); border: 1px solid var(--border);
+            border-radius: 14px; padding: 28px; overflow-x: auto;
+        }
+        .gantt { width: 100%; min-width: 820px; border-collapse: collapse; }
+        .gantt th {
+            font-size: 11px; padding: 10px 7px; text-align: center;
+            color: var(--text2); font-weight: 500; text-transform: uppercase;
+            letter-spacing: 0.05em; border-bottom: 1px solid var(--border);
+        }
+        .gantt th:first-child { text-align: left; padding-left: 0; min-width: 200px; }
+        .gantt td { padding: 9px 7px; text-align: center; border-bottom: 1px solid var(--border); font-size: 13px; }
+        .gantt td:first-child { text-align: left; padding-left: 0; color: var(--text); font-weight: 500; }
+        .gantt tr:last-child td { border-bottom: none; }
+        .gb {
+            height: 26px; border-radius: 5px; display: block; margin: 0 auto;
+            background: linear-gradient(135deg, rgba(166,218,255,0.22), rgba(166,218,255,0.07));
+            border: 1px solid rgba(166,218,255,0.14);
+        }
+        .gantt .phase-row th {
+            background: rgba(166,218,255,0.04); color: var(--accent);
+            font-size: 10px; letter-spacing: 0.12em; padding-top: 16px;
+            border-top: 1px solid rgba(166,218,255,0.15); border-bottom: none;
+        }
+        .gantt .phase-row th:first-child { text-align: left; }
+        .gantt td.ph-div { border-left: 1px solid rgba(166,218,255,0.1); }
+        .phase-badge {
+            display: inline-block; padding: 4px 14px; border-radius: 100px;
+            font-size: 11px; font-weight: 600; letter-spacing: 0.06em; margin-bottom: 20px;
+        }
+        .phase-badge.p1 { background: rgba(166,218,255,0.08); color: var(--accent); border: 1px solid rgba(166,218,255,0.2); }
+        .phase-badge.p2 { background: rgba(100,200,130,0.08); color: var(--green); border: 1px solid rgba(100,200,130,0.2); }
+        .phase-badge.p3 { background: rgba(255,210,100,0.08); color: rgb(255,210,100); border: 1px solid rgba(255,210,100,0.2); }
+
+        /* TRANSPARENCY */
+        .tc {
+            background: var(--bg); border: 1px solid var(--border);
+            border-radius: 14px; padding: 26px;
+        }
+        .tc h4 { font-size: 17px; font-weight: 500; color: var(--text); margin-bottom: 14px; }
+        .tc ul { list-style: none; }
+        .tc li { padding: 5px 0 5px 18px; position: relative; font-size: 14px; }
+        .tc li::before {
+            content: ''; position: absolute; left: 0; top: 12px;
+            width: 5px; height: 5px; border-radius: 50%;
+            background: var(--accent); opacity: 0.4;
+        }
+
+        /* PRINT */
+        @media print {
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            nav { display: none !important; }
+            .scroll { display: none !important; }
+            @keyframes pulse { 0%, 100% { opacity: 1; } }
+            @keyframes bounce { 0%, 100% { transform: none; } }
+            section { padding: 60px 32px; }
+            .iceberg-section { padding: 60px 32px; }
+            .hero { min-height: auto; padding-top: 60px; padding-bottom: 40px; }
+            h1 { font-size: 42px; }
+            h2 { font-size: 30px; }
+            .elev-wrap { grid-template-columns: 1fr 1fr; }
+            .elev-card:first-child { border-radius: 18px 0 0 0; }
+            .elev-card:nth-child(2) { border-radius: 0 18px 0 0; }
+            .elev-card:nth-child(3) { border-radius: 0 0 0 18px; }
+            .elev-card:last-child { border-radius: 0 0 18px 0; }
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            section, .iceberg-section { padding: 64px 20px; }
+            nav { padding: 14px 20px; }
+            .nav-links { display: none; }
+            h1 { font-size: 34px; }
+            h2 { font-size: 26px; }
+            .g2, .g3, .g4, .ga, .opostos-wrap, .ent-grid { grid-template-columns: 1fr; }
+            .elev-wrap { grid-template-columns: 1fr 1fr; }
+            .elev-card:first-child { border-radius: 18px 0 0 0; }
+            .elev-card:nth-child(2) { border-radius: 0 18px 0 0; }
+            .elev-card:nth-child(3) { border-radius: 0 0 0 18px; }
+            .elev-card:last-child { border-radius: 0 0 18px 0; }
+            .cv-wrap { grid-template-columns: 1fr; }
+            .garantia-wrap { padding: 36px 24px; }
+            .cta-wrap { padding: 56px 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAV -->
+    <nav>
+        <div class="nav-logo">Elo x <span>Fulgor</span></div>
+        <ul class="nav-links">
+            <li><a href="#oportunidade">Mercado</a></li>
+            <li><a href="#problema">O Problema</a></li>
+            <li><a href="#jornada">Jornada</a></li>
+            <li><a href="#metodo">Método</a></li>
+            <li><a href="#entregaveis">Entregáveis</a></li>
+            <li><a href="#diferenca">Diferença</a></li>
+            <li><a href="#transparencia">Transparência</a></li>
+            <li><a href="#garantia">Garantia</a></li>
+        </ul>
+    </nav>
+
+    <!-- HERO -->
+    <section class="hero" id="hero">
+        <div class="badge"><div class="dot"></div> Gestão de Jornada de Compra</div>
+
+        <h1>
+            <span class="gt">Sua clínica não tem problema<br>de tráfego. Tem um problema<br>de <span class="serif">jornada.</span></span>
+        </h1>
+
+        <p class="hero-sub">Gestão completa da descoberta à indicação — sem uma etapa negligenciada, sem olhar enviesado, sem métrica de vaidade.</p>
+
+        <div class="hero-tags">
+            <span class="hero-tag">Clínicas de Estética</span>
+            <span class="hero-tag">Pará · Brasil</span>
+            <span class="hero-tag">Contrato de 12 meses</span>
+        </div>
+
+        <div class="scroll">
+            <svg width="22" height="22" viewBox="0 0 256 256" fill="rgba(184,199,217,0.45)"><path d="M216.49,104.49l-80,80a12,12,0,0,1-17,0l-80-80a12,12,0,0,1,17-17L128,159l71.51-71.52a12,12,0,0,1,17,17Z"/></svg>
+        </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- OPORTUNIDADE -->
+    <section id="oportunidade">
+        <div class="sh">
+            <div class="badge">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                O Mercado
+            </div>
+            <h2><span class="gt">Um mercado enorme. <span class="serif">Com um problema crônico.</span></span></h2>
+            <p>O setor de estética cresce, a demanda existe, o dinheiro está na mesa — o que falta é estrutura para capturar.</p>
+        </div>
+
+        <div class="g4" style="margin-bottom: 40px;">
+            <div class="dc">
+                <div class="dc-val">R$ 20bi</div>
+                <div class="dc-lbl">Mercado anual brasileiro</div>
+                <div class="dc-src">Soc. Brasileira de Dermatologia, 2023</div>
+            </div>
+            <div class="dc">
+                <div class="dc-val">8–10%</div>
+                <div class="dc-lbl">Crescimento projetado ao ano até 2030</div>
+                <div class="dc-src">Allied Market Research, 2023</div>
+            </div>
+            <div class="dc">
+                <div class="dc-val">10–15%</div>
+                <div class="dc-lbl">Conversão média de leads sem funil estruturado</div>
+                <div class="dc-src">Benchmarks setoriais, 2023</div>
+            </div>
+            <div class="dc">
+                <div class="dc-val">R$ 5–10k</div>
+                <div class="dc-lbl">LTV médio por paciente</div>
+                <div class="dc-src">Dados setoriais consolidados</div>
+            </div>
+        </div>
+
+        <div class="qb">
+            <p>60% das aquisições no setor vêm do digital — Instagram e Google Ads. O canal de captação existe e funciona. <strong style="color:var(--text)">O problema é o que acontece depois do clique.</strong> Sem jornada estruturada, o lead chega, não é atendido a tempo, não é qualificado e some. A verba foi, o paciente não veio.</p>
+        </div>
+
+        <div class="rb">
+            <h4>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+                O que está sendo perdido agora
+            </h4>
+            <ul>
+                <li>Sem funil estruturado, 85–90% dos leads nunca viram pacientes — e cada um representa uma oportunidade de R$5–10k em LTV</li>
+                <li>Churn anual médio do setor é de 20–30%: um em cada três pacientes não volta por falta de follow-up e relacionamento pós-atendimento</li>
+                <li>30% dos leads desistem por medo de invasividade — dor que scripts e qualificação resolvem antes mesmo da primeira consulta</li>
+                <li>A concorrência se estrutura. Quem montar a jornada primeiro captura a demanda crescente antes dos outros</li>
+            </ul>
+        </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- O PROBLEMA -->
+    <section id="problema">
+        <div class="sh">
+            <div class="badge">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                O Problema
+            </div>
+            <h2><span class="gt">O Ciclo Vicioso do <span class="serif">Especialista</span></span></h2>
+            <p>Cada fornecedor olha para a sua parte do processo — e culpa os outros quando não funciona.</p>
+        </div>
+
+        <div class="cv-wrap">
+            <div class="cv-node">
+                <div class="cv-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                </div>
+                <h4>Gestor de Tráfego</h4>
+                <p>Olha apenas para CPL e CTR. Quando não converte, culpa o atendimento ou a oferta.</p>
+            </div>
+            <div class="cv-node">
+                <div class="cv-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                </div>
+                <h4>Consultoria Comercial</h4>
+                <p>Olha apenas para script e taxa de conversão. Quando falha, culpa a qualidade dos leads.</p>
+            </div>
+            <div class="cv-node">
+                <div class="cv-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+                </div>
+                <h4>O Dono</h4>
+                <p>Fica no meio. Paga para os dois, não entende onde está perdendo dinheiro e o faturamento continua instável.</p>
+            </div>
+        </div>
+
+        <div class="cv-center">
+            <h4>Resultado: instabilidade crônica</h4>
+            <p>Quando tem indicação, o negócio vai bem. Quando não tem, vai mal. O dono não sabe quanto está perdendo entre cada etapa da jornada — do lead até a fidelização. E cada real que vai para tráfego vira <strong style="color:var(--text)">likes, comentários e seguidores</strong> — não faturamento.</p>
+        </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ICEBERG -->
+    <section class="iceberg-section" id="iceberg">
+        <div class="sh">
+            <div class="badge">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                O que você não vê
+            </div>
+            <h2><span class="gt">O que o mercado mostra.<br><span class="serif">E o que realmente move</span> o faturamento.</span></h2>
+        </div>
+
+        <div class="iceberg-wrap">
+            <img src="img-iceberg.jpg" alt="Iceberg — o que está acima e abaixo da superfície">
+            <div class="iceberg-overlay"></div>
+
+            <!-- Linha da superfície -->
+            <div class="iceberg-line" style="top: 34%;"></div>
+
+            <!-- Labels visíveis (acima da água) -->
+            <div class="iceberg-caption top" style="top: 6%; left: 24px;">O que o mercado vende</div>
+            <div class="iceberg-label-group" style="top: 14%;">
+                <span class="iceberg-tag visible">Tráfego Pago</span>
+                <span class="iceberg-tag visible">Posts no Instagram</span>
+            </div>
+            <div class="iceberg-label-group" style="top: 24%;">
+                <span class="iceberg-tag visible">Seguidores</span>
+                <span class="iceberg-tag visible">Likes</span>
+            </div>
+
+            <!-- Labels invisíveis (abaixo da água) -->
+            <div class="iceberg-caption bot" style="top: 39%; left: 24px;">O que realmente move o faturamento</div>
+            <div class="iceberg-label-group" style="top: 47%;">
+                <span class="iceberg-tag hidden">Jornada Estruturada</span>
+                <span class="iceberg-tag hidden">CRM e Funil Visível</span>
+            </div>
+            <div class="iceberg-label-group" style="top: 55%;">
+                <span class="iceberg-tag hidden">Scripts de Qualificação</span>
+                <span class="iceberg-tag hidden">Triagem Rápida</span>
+            </div>
+            <div class="iceberg-label-group" style="top: 63%;">
+                <span class="iceberg-tag hidden">Follow-up Pós-Atendimento</span>
+            </div>
+            <div class="iceberg-label-group" style="top: 70%; justify-content: flex-start; padding-left: 8%;">
+                <span class="iceberg-tag hidden">Retenção de Pacientes</span>
+            </div>
+            <div class="iceberg-label-group" style="top: 74%;">
+                <span class="iceberg-tag hidden">Programa de Indicação</span>
+            </div>
+
+            <div class="iceberg-label-group" style="top: 78%; justify-content: flex-end; padding-right: 6%;">
+                <span class="iceberg-tag hidden">Gestão de Objeções</span>
+            </div>
+            <div class="iceberg-label-group" style="top: 93%;">
+                <span class="iceberg-tag hidden">LTV e Recompra</span>
+                <span class="iceberg-tag hidden">Métricas de Faturamento</span>
+            </div>
+        </div>
+
+        <div class="iceberg-text" style="margin-top: 36px;">
+            <p>O mercado vende a ponta do iceberg — o que é visível, simples de mostrar e fácil de prometer. O trabalho real está embaixo: a estrutura que transforma um lead frio em um paciente fiel que indica. <strong style="color:var(--text)">É exatamente aí que eu atuo.</strong></p>
+        </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- JORNADA -->
+    <section id="jornada">
+        <div class="sh">
+            <div class="badge">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                Jornada de Compra
+            </div>
+            <h2><span class="gt">Da descoberta à indicação —<br><span class="serif">cada etapa estruturada</span></span></h2>
+            <p>A jornada de compra de uma clínica de estética é longa e complexa. Vender um procedimento estético é infinitamente mais difícil do que vender um hambúrguer. Cada etapa exige uma estratégia específica.</p>
+        </div>
+
+        <div class="jornada-wrap">
+
+            <div class="jornada-step">
+                <div class="js-mark">
+                    <div class="js-num">1</div>
+                </div>
+                <div class="js-body">
+                    <div class="js-stage">Descoberta</div>
+                    <div class="js-meaning">"Eu sei que existe"</div>
+                    <h4>A clínica precisa ser encontrada pelo público certo</h4>
+                    <p>Sem presença estratégica, a clínica depende exclusivamente de indicações. O paciente premium precisa saber que você existe — antes de considerar qualquer procedimento.</p>
+                    <div class="js-actions">
+                        <span class="js-pill">Tráfego pago segmentado</span>
+                        <span class="js-pill">Conteúdo de autoridade</span>
+                        <span class="js-pill">Posicionamento premium</span>
+                        <span class="js-pill">SEO local</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="jornada-step">
+                <div class="js-mark">
+                    <div class="js-num">2</div>
+                </div>
+                <div class="js-body">
+                    <div class="js-stage">Atração</div>
+                    <div class="js-meaning">"Eu gosto e confio"</div>
+                    <h4>Despertar desejo e construir autoridade antes do primeiro contato</h4>
+                    <p>Antes de mandar mensagem, o paciente já te avaliou. O Instagram, o Google e o WhatsApp precisam comunicar excelência e resultado — não quantidade de posts.</p>
+                    <div class="js-actions">
+                        <span class="js-pill">Prova social (antes/depois)</span>
+                        <span class="js-pill">Storytelling de resultado</span>
+                        <span class="js-pill">Linha editorial estratégica</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="jornada-step">
+                <div class="js-mark">
+                    <div class="js-num">3</div>
+                </div>
+                <div class="js-body">
+                    <div class="js-stage">Consideração</div>
+                    <div class="js-meaning">"Quero saber mais — mas ainda tenho dúvidas"</div>
+                    <h4>O momento mais crítico — e mais desperdiçado — da jornada</h4>
+                    <p>O lead mandou mensagem. O que acontece nos próximos 3 minutos define se ele vira paciente ou vai para o concorrente. Sem triagem rápida e script de qualificação, leads quentes esfriam antes de agendar.</p>
+                    <div class="js-actions">
+                        <span class="js-pill">Scripts de qualificação</span>
+                        <span class="js-pill">Triagem automatizada</span>
+                        <span class="js-pill">CRM com funil visível</span>
+                        <span class="js-pill">Resposta em menos de 5 minutos</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="jornada-step">
+                <div class="js-mark">
+                    <div class="js-num">4</div>
+                </div>
+                <div class="js-body">
+                    <div class="js-stage">Compra</div>
+                    <div class="js-meaning">"Vou agendar e confiar meu rosto a você"</div>
+                    <h4>Conversão com ticket elevado e sem desconto</h4>
+                    <p>Procedimento estético é venda consultiva — confiança vale mais que preço. Com o processo certo, o paciente chega pronto para comprar. O time fecha mais sem precisar baixar o valor.</p>
+                    <div class="js-actions">
+                        <span class="js-pill">Script de fechamento</span>
+                        <span class="js-pill">Gestão de objeções</span>
+                        <span class="js-pill">Catálogo de procedimentos</span>
+                        <span class="js-pill">Upsell estruturado</span>
+                        <span class="js-pill">Treinamento de time</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="jornada-step">
+                <div class="js-mark">
+                    <div class="js-num">5</div>
+                </div>
+                <div class="js-body">
+                    <div class="js-stage">Recompra</div>
+                    <div class="js-meaning">"Quero mais"</div>
+                    <h4>O paciente que voltou vale mais do que dez novos leads</h4>
+                    <p>A maioria das clínicas investe tudo em captação e esquece que a base de pacientes existente é o ativo mais valioso que tem. Com a régua certa, pacientes voltam, gastam mais e ficam mais tempo.</p>
+                    <div class="js-actions">
+                        <span class="js-pill">Follow-up pós-atendimento</span>
+                        <span class="js-pill">Régua de reativação</span>
+                        <span class="js-pill">Fidelização estruturada</span>
+                        <span class="js-pill">Aumento de LTV</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="jornada-step">
+                <div class="js-mark">
+                    <div class="js-num">6</div>
+                </div>
+                <div class="js-body">
+                    <div class="js-stage">Indicação</div>
+                    <div class="js-meaning">"Todo mundo precisa saber disso"</div>
+                    <h4>Cada paciente vira um canal de novos negócios</h4>
+                    <p>Indicação não é sorte — é resultado de uma experiência tão boa que o paciente se sente obrigado a contar para alguém. Com o programa certo, a indicação deixa de ser espontânea e vira um fluxo previsível.</p>
+                    <div class="js-actions">
+                        <span class="js-pill">Programa de indicação</span>
+                        <span class="js-pill">Coleta de depoimentos</span>
+                        <span class="js-pill">Prova social em escala</span>
+                        <span class="js-pill">Ciclo sustentável</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- MÉTODO ELEV -->
+    <section id="metodo">
+        <div class="sh">
+            <div class="badge">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                Método ELEV
+            </div>
+            <h2><span class="gt">Como o trabalho é <span class="serif">conduzido</span></span></h2>
+            <p>Não existe escala sem estrutura. O método ELEV garante que cada real investido seja justificado antes de ser amplificado.</p>
+        </div>
+
+        <div class="elev-wrap">
+            <div class="elev-card">
+                <div class="elev-letter">E</div>
+                <div class="elev-label">Exploração</div>
+                <p>Diagnóstico profundo da operação antes de executar qualquer coisa. Mapeamos a jornada atual, identificamos onde o dinheiro está sendo perdido e definimos as prioridades com dados reais — não suposições.</p>
+            </div>
+            <div class="elev-card">
+                <div class="elev-letter">L</div>
+                <div class="elev-label">Lapidação</div>
+                <p>Estruturamos e testamos cada etapa da jornada com o mínimo de verba possível. Nada é escalado sem validação. Encontramos o que funciona antes de investir pesado.</p>
+            </div>
+            <div class="elev-card">
+                <div class="elev-letter">E</div>
+                <div class="elev-label">Escala</div>
+                <p>Com o que foi validado em mãos, ampliamos o que funciona. Mais verba, mais alcance, mais volume — mas sem desperdiçar investimento em hipóteses não testadas.</p>
+            </div>
+            <div class="elev-card">
+                <div class="elev-letter">V</div>
+                <div class="elev-label">Validação</div>
+                <p>Métricas de faturamento, não de vaidade. Acompanhamento semanal com dados reais: custo por paciente agendado, taxa de conversão por etapa, ticket médio e retorno sobre o investimento.</p>
+            </div>
+        </div>
+
+        <div class="qb" style="margin-top: 40px;">
+            <p>A presença é <strong style="color:var(--text)">diária, não mensal</strong>. Contato direto no WhatsApp toda semana: o que foi feito, o que será feito e o que está bloqueando. Reunião semanal com métricas reais. Você nunca fica no escuro.</p>
+        </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ENTREGÁVEIS -->
+    <section id="entregaveis">
+        <div class="sh">
+            <div class="badge">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                Entregáveis
+            </div>
+            <h2><span class="gt">O que está incluído <span class="serif">de ponta a ponta</span></span></h2>
+            <p>Tudo que é necessário para transformar uma clínica dependente de indicações em uma operação com previsibilidade de receita.</p>
+        </div>
+
+        <div class="ent-grid">
+            <div class="ent-card">
+                <div class="ent-num">01</div>
+                <div class="ent-body">
+                    <h4>Marketing Digital</h4>
+                    <p>Gestão de tráfego pago (Meta Ads), linha editorial estratégica, produção de criativos e otimização contínua com base em dados de conversão — não de alcance.</p>
+                </div>
+            </div>
+            <div class="ent-card">
+                <div class="ent-num">02</div>
+                <div class="ent-body">
+                    <h4>Marketing Físico</h4>
+                    <p>Materiais de ponto de venda, experiência presencial e comunicação off-line que reforçam o posicionamento premium da clínica em todos os contatos com o paciente.</p>
+                </div>
+            </div>
+            <div class="ent-card">
+                <div class="ent-num">03</div>
+                <div class="ent-body">
+                    <h4>Scripts de Atendimento e Vendas</h4>
+                    <p>Roteiros de triagem, qualificação e fechamento desenhados para o contexto de clínicas de estética — com gestão de objeções de preço, medo e comparação com concorrentes.</p>
+                </div>
+            </div>
+            <div class="ent-card">
+                <div class="ent-num">04</div>
+                <div class="ent-body">
+                    <h4>Treinamento de Time</h4>
+                    <p>Capacitação da equipe de atendimento e vendas para usar os scripts, operar o CRM e manter o padrão de resposta rápida que converte leads quentes antes que esfriem.</p>
+                </div>
+            </div>
+            <div class="ent-card">
+                <div class="ent-num">05</div>
+                <div class="ent-body">
+                    <h4>CRM e Estrutura de Funil</h4>
+                    <p>Implementação e gestão do CRM com visibilidade total sobre cada etapa: lead recebido → triado → agendado → compareceu → fechou. Sem mais leads perdidos no limbo.</p>
+                </div>
+            </div>
+            <div class="ent-card">
+                <div class="ent-num">06</div>
+                <div class="ent-body">
+                    <h4>Melhoria de Oferta</h4>
+                    <p>Análise e estruturação dos procedimentos e pacotes da clínica para elevar o ticket médio, facilitar o upsell e criar ofertas que o paciente sente que seria idiota recusar.</p>
+                </div>
+            </div>
+            <div class="ent-card">
+                <div class="ent-num">07</div>
+                <div class="ent-body">
+                    <h4>Retenção e Fidelização</h4>
+                    <p>Régua de follow-up pós-atendimento, campanhas de reativação para pacientes inativos e sistema de coleta de depoimentos e antes/depois para ampliar a prova social.</p>
+                </div>
+            </div>
+            <div class="ent-card">
+                <div class="ent-num">08</div>
+                <div class="ent-body">
+                    <h4>Programa de Indicação</h4>
+                    <p>Estruturação de um mecanismo de indicação que transforma pacientes satisfeitos em um canal previsível de novos negócios — com incentivos e comunicação automatizada.</p>
+                </div>
+            </div>
+            <div class="ent-card" style="grid-column: 1 / -1; border-style: dashed; background: transparent;">
+                <div class="ent-num" style="background: rgba(166,218,255,0.04);">+</div>
+                <div class="ent-body">
+                    <h4>E muito mais — o trabalho é flexível, não engessado</h4>
+                    <p>Como a gestão é de ponta a ponta, não existe um checklist fixo. O trabalho se adapta ao que a clínica precisa em cada momento: se o gargalo está no atendimento, vamos para o atendimento. Se está na oferta, trabalhamos a oferta. O objetivo é sempre o mesmo — mais faturamento, com crescimento sustentável.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- OPOSTOS -->
+    <section id="diferenca">
+        <div class="sh">
+            <div class="badge">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                A Diferença
+            </div>
+            <h2><span class="gt">O mercado. <span class="serif">E o que fazemos</span> diferente.</span></h2>
+            <p>Não é questão de julgamento — é questão de escopo. Cada um faz o que sabe fazer. O problema é que o faturamento depende do todo.</p>
+        </div>
+
+        <div class="opostos-wrap">
+            <div class="op-col bad">
+                <div class="op-header">✕ &nbsp;O que o mercado faz</div>
+                <div class="op-row">
+                    <div class="op-icon">✕</div>
+                    <p><strong>Olha para uma etapa.</strong> Tráfego, script ou conteúdo — nunca a jornada completa.</p>
+                </div>
+                <div class="op-row">
+                    <div class="op-icon">✕</div>
+                    <p><strong>Culpa as outras áreas.</strong> O gestor de tráfego culpa o atendimento. O comercial culpa os leads. Ninguém assume o resultado.</p>
+                </div>
+                <div class="op-row">
+                    <div class="op-icon">✕</div>
+                    <p><strong>Entrega métricas de vaidade.</strong> Likes, seguidores, alcance e impressões que não pagam contas.</p>
+                </div>
+                <div class="op-row">
+                    <div class="op-icon">✕</div>
+                    <p><strong>Recebe e some.</strong> Relatório mensal, quando aparece. Você nunca sabe o que está sendo feito.</p>
+                </div>
+                <div class="op-row">
+                    <div class="op-icon">✕</div>
+                    <p><strong>Escala sem estrutura.</strong> Aumenta a verba de tráfego em cima de uma jornada quebrada — e o dinheiro escoa.</p>
+                </div>
+                <div class="op-row">
+                    <div class="op-icon">✕</div>
+                    <p><strong>Entra como prestador de serviço.</strong> Entrega a parte dele, cobra e vai embora. O resultado final não é problema dele.</p>
+                </div>
+                <div class="op-row">
+                    <div class="op-icon">✕</div>
+                    <p><strong>Pensa em curto prazo.</strong> Foco na entrega do mês, sem visão de LTV, fidelização e crescimento sustentável.</p>
+                </div>
+            </div>
+
+            <div class="op-col good">
+                <div class="op-header">✓ &nbsp;O que fazemos</div>
+                <div class="op-row">
+                    <div class="op-icon">✓</div>
+                    <p><strong>Visão de ponta a ponta.</strong> Da descoberta à indicação — sem etapa negligenciada e sem olhar enviesado.</p>
+                </div>
+                <div class="op-row">
+                    <div class="op-icon">✓</div>
+                    <p><strong>Responsabilidade total pelo resultado.</strong> Uma visão, um objetivo: mais faturamento com crescimento sustentável.</p>
+                </div>
+                <div class="op-row">
+                    <div class="op-icon">✓</div>
+                    <p><strong>Métricas de faturamento.</strong> Custo por paciente agendado, taxa de conversão por etapa, ticket médio e ROI real.</p>
+                </div>
+                <div class="op-row">
+                    <div class="op-icon">✓</div>
+                    <p><strong>Presente todo dia.</strong> Contato semanal no WhatsApp + reunião de métricas toda semana. Sem sumiço.</p>
+                </div>
+                <div class="op-row">
+                    <div class="op-icon">✓</div>
+                    <p><strong>Estrutura antes de escalar.</strong> A jornada precisa estar funcionando antes de aumentar o investimento.</p>
+                </div>
+                <div class="op-row">
+                    <div class="op-icon">✓</div>
+                    <p><strong>Sócio estratégico de crescimento.</strong> O resultado final importa tanto quanto o meu quanto o seu — e o modelo de trabalho reflete isso.</p>
+                </div>
+                <div class="op-row">
+                    <div class="op-icon">✓</div>
+                    <p><strong>Pensa em crescimento sustentável.</strong> LTV, fidelização e margem para o cliente — não só captação no topo do funil.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- TRANSPARÊNCIA -->
+    <section id="transparencia">
+        <div class="sh">
+            <div class="badge">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                Transparência
+            </div>
+            <h2><span class="gt">Sem surpresas — <span class="serif">de nenhum dos lados</span></span></h2>
+            <p>Uma parceria funciona quando as expectativas estão alinhadas desde o início. Isso vale para os dois lados.</p>
+        </div>
+
+        <div class="g2">
+            <div class="tc">
+                <h4>O que nos comprometemos</h4>
+                <ul>
+                    <li><strong style="color:var(--text)">Presença diária:</strong> check-in no WhatsApp com o que foi feito, o que será feito e o que está bloqueando — sem sumiço</li>
+                    <li><strong style="color:var(--text)">Reunião semanal de métricas:</strong> números reais, não relatório mensal com print de likes</li>
+                    <li><strong style="color:var(--text)">Foco em faturamento:</strong> o objetivo é sempre mais receita — não quantidade de posts ou alcance</li>
+                    <li><strong style="color:var(--text)">Visão de ponta a ponta:</strong> sem olhar enviesado, sem culpar nenhuma etapa — responsabilidade total pelo processo</li>
+                    <li><strong style="color:var(--text)">Estrutura antes de escala:</strong> nenhum real de tráfego é amplificado antes de a jornada estar funcionando</li>
+                    <li><strong style="color:var(--text)">Crescimento sustentável:</strong> margem para o cliente, LTV crescente e previsibilidade — não só captação</li>
+                </ul>
+            </div>
+
+            <div class="tc">
+                <h4>O que esperamos de você</h4>
+                <ul>
+                    <li><strong style="color:var(--text)">Compromisso com o processo:</strong> a velocidade dos resultados depende da velocidade da colaboração</li>
+                    <li><strong style="color:var(--text)">Disponibilidade para reuniões:</strong> a reunião semanal é onde o trabalho é alinhado — ela não pode ser pulada</li>
+                    <li><strong style="color:var(--text)">Acesso a materiais:</strong> fotos de resultado, depoimentos de pacientes, acesso às redes — sem esses insumos, o trabalho trava</li>
+                    <li><strong style="color:var(--text)">Autonomia profissional:</strong> confiar no método é parte do contrato — ajustes baseados em dados, não em preferências estéticas</li>
+                    <li><strong style="color:var(--text)">Comprometimento com o crescimento:</strong> se a clínica não aplicar o que é definido nas reuniões, o resultado não vem — e isso precisa estar claro</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- GARANTIA -->
+    <section id="garantia">
+        <div class="sh">
+            <div class="badge">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Garantia
+            </div>
+            <h2><span class="gt">Risco é nosso, <span class="serif">não seu</span></span></h2>
+        </div>
+
+        <div class="garantia-wrap">
+            <div class="garantia-big">
+                "Se em 90 dias o faturamento<br>não for maior, trabalhamos os<br><span class="serif">meses 4 e 5 sem custo."</span>
+            </div>
+            <p class="garantia-sub">Se a operação estiver funcionando e os resultados não aparecerem dentro do prazo, continuamos trabalhando nos meses seguintes sem cobrar nada a mais. Simples assim.</p>
+            <div class="garantia-badge">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Garantia de serviço — sem letra miúda
+            </div>
+        </div>
+
+        <!-- BÔNUS -->
+        <div style="margin-top: 40px;">
+            <div class="card">
+                <div class="card-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                </div>
+                <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 280px;">
+                        <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); margin-bottom: 8px; font-weight: 600;">Bônus incluído</div>
+                        <h3 style="margin-bottom: 10px;">Raio-X de Faturamento + Plano de Ataque 60 Dias</h3>
+                        <p style="font-size: 14px; max-width: 560px;">Uma reunião de diagnóstico aprofundado onde mapeamos tudo que está travando o crescimento da clínica — e entregamos um plano prático com passo a passo detalhado do que implementar nos próximos 60 dias para elevar o faturamento. Tão claro que qualquer pessoa consegue executar. Tão estratégico que você vai querer que eu execute.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="fb">Elo x <span>Fulgor</span></div>
+        <p>Gestão de Jornada de Compra para Clínicas de Estética</p>
+        <p style="margin-top: 6px; font-size: 11px; opacity: 0.4;">Pará · Brasil · 2026</p>
+    </footer>
+
+</body>
+</html>
